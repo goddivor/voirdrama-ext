@@ -1,0 +1,16 @@
+ext {
+    extName = 'VoirDrama'
+    extClass = '.VoirDrama'
+    extVersionCode = 1
+}
+
+apply from: "$rootDir/common.gradle"
+
+dependencies {
+    implementation(project(':lib:playlist-utils'))
+    implementation(project(':lib:vidmoly-extractor'))
+    implementation(project(':lib:filemoon-extractor'))
+    implementation(project(':lib:voe-extractor'))
+    implementation(project(':lib:streamtape-extractor'))
+    implementation(project(':lib:vk-extractor'))
+}
