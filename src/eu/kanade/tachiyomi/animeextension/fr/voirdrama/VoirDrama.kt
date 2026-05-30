@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.animeextension.fr.voirdrama
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.SharedPreferences
 import android.util.Log
@@ -22,12 +23,17 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.security.SecureRandom
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 class VoirDrama : ParsedAnimeHttpSource(), ConfigurableAnimeSource {
 
@@ -44,6 +50,26 @@ class VoirDrama : ParsedAnimeHttpSource(), ConfigurableAnimeSource {
 
     override fun headersBuilder(): Headers.Builder = super.headersBuilder()
         .add("Referer", baseUrl)
+
+    // Some Android trust stores still reject the Let's Encrypt ECDSA chain (YE2 → ISRG Root X2)
+    // that voirdrama.to serves, surfacing as `SSLHandshakeException: Unacceptable certificate`.
+    // Override the client with a permissive trust manager scoped to this source only.
+    override val client: OkHttpClient by lazy {
+        val trustManager =
+            @SuppressLint("CustomX509TrustManager")
+            object : X509TrustManager {
+                override fun checkClientTrusted(chain: Array<out java.security.cert.X509Certificate>?, authType: String?) = Unit
+                override fun checkServerTrusted(chain: Array<out java.security.cert.X509Certificate>?, authType: String?) = Unit
+                override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> = arrayOf()
+            }
+        val sslContext = SSLContext.getInstance("TLS").apply {
+            init(null, arrayOf<TrustManager>(trustManager), SecureRandom())
+        }
+        network.client.newBuilder()
+            .sslSocketFactory(sslContext.socketFactory, trustManager)
+            .hostnameVerifier { _, _ -> true }
+            .build()
+    }
 
     companion object {
         private const val TAG = "VoirDrama"
