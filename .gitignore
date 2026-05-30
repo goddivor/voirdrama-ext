@@ -1,0 +1,40 @@
+# Build files
+/build
+*.apk
+*.ap_
+*.dex
+*.class
+*.jar
+*.aar
+
+# Gradle
+.gradle
+/local.properties
+gradle-wrapper.jar
+gradle-wrapper.properties
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+*.swp
+*.swo
+
+# Android Studio
+bin/
+gen/
+
+.env
+
+# Output
+/out
+
+# Misc
+*.log
+*.jks
+*.keystore
+
+# Claude
+CLAUDE.md
